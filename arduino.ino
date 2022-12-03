@@ -5,6 +5,7 @@ int motor1[] = {4, 5};
 #define trigPin 9
 
 //long duration;
+// Sup
 int distance;
 
 void setup() {
