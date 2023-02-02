@@ -35,7 +35,4 @@ void  WheelController::TurnLeft()
       digitalWrite(motor1[1], HIGH);
       delay(700);
 }
-void LeftCenterRightTurn()
-{
-  
-}
+
