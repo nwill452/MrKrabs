@@ -19,7 +19,7 @@ int distance;
 #include "WheelController.h"
 #include "UltraSound.h"
 
-UltraSound  soundSensor(8,9);
+UltraSound  soundSensor(8,9)
 WheelController  Controller(motor1,motor2);
 
 void setup() {
@@ -33,12 +33,37 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(soundSensor.distanceRemoveError(10));
+  
+
+ 
 }
 
 
 
 
+int getDistance()
+{
+  long duration;
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+
+  distance = duration * 0.034 / 2;
+  return distance;
+}
 
 
 
+int distanceRemoveError(int samples)
+{
+   int avg = 0;
+   for( int i = 0; i < samples; i++  )
+   {
+       avg += getDistance();
+   }
+
+   return avg/samples ;  
+}

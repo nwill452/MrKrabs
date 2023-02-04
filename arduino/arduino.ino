@@ -47,11 +47,12 @@ int distanceRemoveError(int samples)
 
 void loop() {
 
+  int distance_no_err = distanceRemoveError(5);
   //Serial.print("Distance: ");
-  //Serial.println( distanceRemoveError(5));
+  Serial.println(distance_no_err);
   //Serial.println(" cm");
 
-  if(distanceRemoveError(5) < 76) 
+  if(distance_no_err < 76) 
   {
     // Moves towards target
     digitalWrite(motor1[0], LOW);
@@ -59,7 +60,15 @@ void loop() {
 
     digitalWrite(motor2[0], LOW);
     digitalWrite(motor2[1], HIGH); 
-  } else {
+  } else if (distance_no_err > 75) {
+    // Moves towards target
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], LOW);
+
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], LOW); 
+  }
+  /**else {
     // Spins in circle looking for target
     delay(200);
     digitalWrite(motor1[0], HIGH);
@@ -73,5 +82,5 @@ void loop() {
     digitalWrite(motor2[0], LOW);
     digitalWrite(motor2[1], LOW);
   }
-
+**/
 }

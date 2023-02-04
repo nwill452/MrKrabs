@@ -7,7 +7,7 @@ class UltraSound{
   private:
   int ecoport;
   int trigport;
-  long distance;
+  int distance;
   
 
 

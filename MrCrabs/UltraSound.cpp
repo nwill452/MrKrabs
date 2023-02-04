@@ -7,7 +7,7 @@ UltraSound::UltraSound(int eco, int trig)
   ecoport = eco;
   trigport = trig;
   pinMode(ecoport, OUTPUT);
-  pinMode(trigport, INPUT);
+  pinMode(trig, INPUT);
 }
 
 UltraSound::distanceRemoveError(int samples){
