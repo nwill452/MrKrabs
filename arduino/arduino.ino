@@ -3,6 +3,7 @@ int motor1[] = {4, 5};
 
 #define echoPin 8
 #define trigPin 9
+#define lightPin 13
 
 //long duration;
 // Sup
@@ -11,8 +12,8 @@ int distance;
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  pinMode(lightPin, INPUT);
   Serial.begin(9600);
-
   pinMode(motor1[0], OUTPUT);
   pinMode(motor1[1], OUTPUT);
   pinMode(motor2[0], OUTPUT);
@@ -46,27 +47,58 @@ int distanceRemoveError(int samples)
 }
 
 void loop() {
-
+  // print current time
+  
   int distance_no_err = distanceRemoveError(5);
+  int detect = digitalRead(lightPin);
   //Serial.print("Distance: ");
   Serial.println(distance_no_err);
   //Serial.println(" cm");
 
-  if(distance_no_err < 76) 
-  {
+  // detect is HIGH on black, every other colour is LOW
+  if (detect == HIGH) {
+    Serial.println("High");
+  } else if (detect == LOW) {
+    Serial.println("Low");
+  }
+
+  if (detect == HIGH) {
+    // Turns around and moves in the other direction
+    // Backwards
+    digitalWrite(motor1[0], HIGH);
+    digitalWrite(motor1[1], LOW);
+    digitalWrite(motor2[0], HIGH);
+    digitalWrite(motor2[1], LOW);
+    delay(1000);    
+
+    // Right wheel only
+    //digitalWrite(motor1[0], HIGH);
+    //digitalWrite(motor1[1], LOW);
+    //digitalWrite(motor2[0], LOW);
+    //digitalWrite(motor2[1], LOW);
+    //delay(300);
+
+    // Both wheels in different directions
+    digitalWrite(motor1[0], HIGH);
+    digitalWrite(motor1[1], LOW);
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], HIGH);
+    delay(600);
+
+  } else if(distance_no_err < 76 && detect == LOW) {
     // Moves towards target
     digitalWrite(motor1[0], LOW);
     digitalWrite(motor1[1], HIGH);
 
     digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], HIGH); 
+    digitalWrite(motor2[1], HIGH);
   } else if (distance_no_err > 75) {
-    // Moves towards target
+    // Stops moving entirely
     digitalWrite(motor1[0], LOW);
     digitalWrite(motor1[1], LOW);
 
     digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], LOW); 
+    digitalWrite(motor2[1], LOW);
   }
   /**else {
     // Spins in circle looking for target
