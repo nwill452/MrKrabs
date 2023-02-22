@@ -46,6 +46,88 @@ int distanceRemoveError(int samples)
    return avg/samples ;  
 }
 
+void run(bool go) {
+  if (go) {
+    // Moves towards target
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], HIGH);
+
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], HIGH);    
+  } else {
+    // No movement
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], LOW);
+
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], LOW);
+  }
+}
+
+void backwards() {
+// Backwards
+  digitalWrite(motor1[0], HIGH);
+  digitalWrite(motor1[1], LOW);
+  digitalWrite(motor2[0], HIGH);
+  digitalWrite(motor2[1], LOW);
+  delay(900);  
+}
+
+void spin_180() {
+  // Turns around with both wheels moving in different directions
+  digitalWrite(motor1[0], HIGH);
+  digitalWrite(motor1[1], LOW);
+
+  digitalWrite(motor2[0], LOW);
+  digitalWrite(motor2[1], HIGH);
+  delay(500);
+}
+
+void roundabout() {
+
+  unsigned long starttime = millis();
+  unsigned long endtime = starttime;
+  int loop_count = 0;
+
+  while ((endtime - starttime) <= 1000) {
+
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], HIGH);
+
+    if (loop_count % 4 == 0) {
+      digitalWrite(motor2[0], LOW);
+      digitalWrite(motor2[1], HIGH);
+    }
+
+    delay(300);
+
+    endtime = millis();
+    loop_count++;
+  }
+
+  starttime = millis();
+  endtime = starttime;
+  loop_count = 0;
+
+  while ((endtime - starttime) <= 1000) {
+    
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], HIGH);
+
+    if (loop_count % 4 == 0) {
+      digitalWrite(motor1[0], LOW);
+      digitalWrite(motor1[1], HIGH);
+    }
+
+    delay(300);
+
+    endtime = millis();
+    loop_count++;
+  }
+  
+  Serial.println("Done!");
+}
+
 void loop() {
   // print current time
   
@@ -63,56 +145,24 @@ void loop() {
   }
 
   if (detect == HIGH) {
-    // Turns around and moves in the other direction
-    // Backwards
-    digitalWrite(motor1[0], HIGH);
-    digitalWrite(motor1[1], LOW);
-    digitalWrite(motor2[0], HIGH);
-    digitalWrite(motor2[1], LOW);
-    delay(1000);    
-
-    // Right wheel only
-    //digitalWrite(motor1[0], HIGH);
-    //digitalWrite(motor1[1], LOW);
-    //digitalWrite(motor2[0], LOW);
-    //digitalWrite(motor2[1], LOW);
-    //delay(300);
-
-    // Both wheels in different directions
-    digitalWrite(motor1[0], HIGH);
-    digitalWrite(motor1[1], LOW);
-    digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], HIGH);
-    delay(600);
-
-  } else if(distance_no_err < 76 && detect == LOW) {
+    // backs up while still on black and then spins when it detects otherwise
+    while (detect == HIGH) {
+      backwards();
+      detect = digitalRead(lightPin);
+      if (detect == HIGH) {
+        Serial.println("High");
+      } else if (detect == LOW) {
+        Serial.println("Low");
+      }
+    }
+    spin_180();
+  } else if (distance_no_err < 25) {
+    roundabout();
+  } else if (distance_no_err < 76 && detect == LOW) {
     // Moves towards target
-    digitalWrite(motor1[0], LOW);
-    digitalWrite(motor1[1], HIGH);
-
-    digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], HIGH);
+    run(true);
   } else if (distance_no_err > 75) {
     // Stops moving entirely
-    digitalWrite(motor1[0], LOW);
-    digitalWrite(motor1[1], LOW);
-
-    digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], LOW);
+    run(false);
   }
-  /**else {
-    // Spins in circle looking for target
-    delay(200);
-    digitalWrite(motor1[0], HIGH);
-    digitalWrite(motor1[1], LOW);
-    digitalWrite(motor2[0], HIGH);
-    digitalWrite(motor2[1], LOW);
-
-    delay(100);
-    digitalWrite(motor1[0], HIGH);
-    digitalWrite(motor1[1], LOW);
-    digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], LOW);
-  }
-**/
 }
