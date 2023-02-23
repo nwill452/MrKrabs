@@ -53,7 +53,8 @@ void run(bool go) {
     digitalWrite(motor1[1], HIGH);
 
     digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], HIGH);    
+    digitalWrite(motor2[1], HIGH);
+    delay(200);    
   } else {
     // No movement
     digitalWrite(motor1[0], LOW);
@@ -61,6 +62,7 @@ void run(bool go) {
 
     digitalWrite(motor2[0], LOW);
     digitalWrite(motor2[1], LOW);
+    delay(200);
   }
 }
 
@@ -84,48 +86,40 @@ void spin_180() {
 }
 
 void roundabout() {
+  // first, 90 degree turn
+  digitalWrite(motor1[0], HIGH);
+  digitalWrite(motor1[1], LOW);
 
+  digitalWrite(motor2[0], LOW);
+  digitalWrite(motor2[1], HIGH);
+  delay(500);
+
+  // moves forward
   unsigned long starttime = millis();
   unsigned long endtime = starttime;
-  int loop_count = 0;
+  while (((endtime - starttime) <= 1000) || is_out_of_ring()) // do this loop for up to 1000mS
+  {
+  digitalWrite(motor1[0], LOW);
+  digitalWrite(motor1[1], HIGH);
 
-  while ((endtime - starttime) <= 1000) {
+  digitalWrite(motor2[0], LOW);
+  digitalWrite(motor2[1], HIGH); 
 
-    digitalWrite(motor1[0], LOW);
-    digitalWrite(motor1[1], HIGH);
-
-    if (loop_count % 4 == 0) {
-      digitalWrite(motor2[0], LOW);
-      digitalWrite(motor2[1], HIGH);
-    }
-
-    delay(300);
-
-    endtime = millis();
-    loop_count++;
+  endtime = millis();
   }
 
-  starttime = millis();
-  endtime = starttime;
-  loop_count = 0;
+}
 
-  while ((endtime - starttime) <= 1000) {
-    
-    digitalWrite(motor2[0], LOW);
-    digitalWrite(motor2[1], HIGH);
+bool is_out_of_ring() {
 
-    if (loop_count % 4 == 0) {
-      digitalWrite(motor1[0], LOW);
-      digitalWrite(motor1[1], HIGH);
-    }
+  int detect = digitalRead(lightPin);
+  bool out_of_ring = true;
 
-    delay(300);
+  if (detect == HIGH)
+    out_of_ring = false;
 
-    endtime = millis();
-    loop_count++;
-  }
-  
-  Serial.println("Done!");
+  return out_of_ring;
+
 }
 
 void loop() {
@@ -156,8 +150,10 @@ void loop() {
       }
     }
     spin_180();
-  } else if (distance_no_err < 25) {
-    roundabout();
+  } else if (distance_no_err < 30) {
+    // Moves in a semisquare
+    for (int i = 0; i < 3; i++)
+      roundabout();
   } else if (distance_no_err < 76 && detect == LOW) {
     // Moves towards target
     run(true);
