@@ -85,27 +85,42 @@ void spin_180() {
   delay(500);
 }
 
-void roundabout() {
-  // first, 90 degree turn
-  digitalWrite(motor1[0], HIGH);
-  digitalWrite(motor1[1], LOW);
+void roundabout(bool turn_left) {
+  Serial.println("ra!");
+  
+  if (turn_left) {
+    // 90 degree turn Left
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], HIGH);
 
-  digitalWrite(motor2[0], LOW);
-  digitalWrite(motor2[1], HIGH);
-  delay(500);
+    digitalWrite(motor2[0], HIGH);
+    digitalWrite(motor2[1], LOW);
+    delay(500);
+  } else {
+    // 90 degree turn right
+    digitalWrite(motor1[0], HIGH);
+    digitalWrite(motor1[1], LOW);
+
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], HIGH);
+    delay(500);
+  }
 
   // moves forward
   unsigned long starttime = millis();
   unsigned long endtime = starttime;
-  while (((endtime - starttime) <= 1000) || is_out_of_ring()) // do this loop for up to 1000mS
-  {
-  digitalWrite(motor1[0], LOW);
-  digitalWrite(motor1[1], HIGH);
 
-  digitalWrite(motor2[0], LOW);
-  digitalWrite(motor2[1], HIGH); 
+  // do this loop for up to 1000mS
+  while (((endtime - starttime) <= 1000)) {
+    Serial.println("Go!");
 
-  endtime = millis();
+    digitalWrite(motor1[0], LOW);
+    digitalWrite(motor1[1], HIGH);
+
+    digitalWrite(motor2[0], LOW);
+    digitalWrite(motor2[1], HIGH); 
+
+    endtime = millis();
   }
 
 }
@@ -113,10 +128,12 @@ void roundabout() {
 bool is_out_of_ring() {
 
   int detect = digitalRead(lightPin);
-  bool out_of_ring = true;
+  bool out_of_ring = false;
 
   if (detect == HIGH)
-    out_of_ring = false;
+    out_of_ring = true;
+
+  Serial.println("detect");
 
   return out_of_ring;
 
@@ -152,8 +169,13 @@ void loop() {
     spin_180();
   } else if (distance_no_err < 30) {
     // Moves in a semisquare
-    for (int i = 0; i < 3; i++)
-      roundabout();
+    bool directions[] = {true, false, false};
+
+    for (int i = 0; i < 3; i++) {
+      roundabout(directions[i]);
+      delay(1000);
+    }
+      
   } else if (distance_no_err < 76 && detect == LOW) {
     // Moves towards target
     run(true);
