@@ -1,10 +1,9 @@
-// This file uses the Ultrasonic Sensor
+// Uses the SHARP infrared sensor
 
 int motor2[] = {2, 3};
 int motor1[] = {4, 5};
 
-#define echoPin 8
-#define trigPin 9
+#define sharpPin A0
 #define lightPin 13
 
 //long duration;
@@ -12,8 +11,7 @@ int motor1[] = {4, 5};
 int distance;
 
 void setup() {
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode(sharpPin, INPUT);
   pinMode(lightPin, INPUT);
   Serial.begin(9600);
   pinMode(motor1[0], OUTPUT);
@@ -23,26 +21,22 @@ void setup() {
 }
 
 
-int getDistance()
+int getDistance(int raw)
 {
-  long duration;
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-
-  distance = duration * 0.034 / 2;
-  return distance;
+ 	////IR Distance sensor conversion rule
+ 	float Vout = float(raw) * 0.0048828125; // Conversion analog to voltage
+ 	int phys = 13 * pow(Vout, -1); // Conversion volt to distance
+ 	return phys;
 }
 
 int distanceRemoveError(int samples)
 {
-   int avg = 0;
+  int avg = 0;
+  int gp2y0a21Val = analogRead(sharpPin);
+
    for( int i = 0; i < samples; i++  )
    {
-       avg += getDistance();
+       avg += getDistance(gp2y0a21Val);
    }
 
    return avg/samples ;  
@@ -88,7 +82,7 @@ void spin_180() {
 }
 
 void roundabout(bool turn_left) {
-  Serial.println("ra!");
+  //Serial.println("ra!");
   
   if (turn_left) {
     // 45 degree turn Left
@@ -113,9 +107,8 @@ void roundabout(bool turn_left) {
   unsigned long endtime = starttime;
 
   // do this loop for up to 1000mS
+  Serial.println("Go!");
   while (((endtime - starttime) <= 1000)) {
-    Serial.println("Go!");
-
     digitalWrite(motor1[0], LOW);
     digitalWrite(motor1[1], HIGH);
 
@@ -134,7 +127,6 @@ bool is_out_of_ring() {
 
   if (detect == HIGH)
     out_of_ring = true;
-
   Serial.println("detect");
 
   return out_of_ring;
@@ -142,8 +134,6 @@ bool is_out_of_ring() {
 }
 
 void loop() {
-  // print current time
-  
   int distance_no_err = distanceRemoveError(5);
   int detect = digitalRead(lightPin);
   //Serial.print("Distance: ");
@@ -169,17 +159,17 @@ void loop() {
       }
     }
     spin_180();
-  } //else if (distance_no_err < 30) {
-    // Moves in a semidiamond
-    //bool directions[] = {true, false};
+  } 
+  else if (distance_no_err < 30) {
+    // Moves in a semisquare
+    bool directions[] = {true, false};
 
-    //for (int i = 0; i < 2; i++) {
-      //roundabout(directions[i]);
-      //delay(1000);
-    //}
+    for (int i = 0; i < 2; i++) {
+      roundabout(directions[i]);
+      delay(1000);
+    }
       
-  //} 
-  else if (distance_no_err < 76 && detect == LOW) {
+  } else if (distance_no_err < 76 && detect == LOW) {
     // Moves towards target
     run(true);
   } else if (distance_no_err > 75) {
