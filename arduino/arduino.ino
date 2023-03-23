@@ -1,7 +1,7 @@
 // This file uses the Ultrasonic Sensor
 
-int motor2[] = {2, 3};
-int motor1[] = {4, 5};
+int motor2[] = {3, 2};
+int motor1[] = {5, 4};
 
 #define echoPin 8
 #define trigPin 9

@@ -1,10 +1,12 @@
 // Uses the SHARP infrared sensor
+#include "Average.h"
+Average<float> ave(10);
 
-int motor2[] = {2, 3};
-int motor1[] = {4, 5};
+int motor2[] = {3, 2};
+int motor1[] = {5, 4};
 
 #define sharpPin A0
-#define lightPin 13
+#define lightPin A1
 
 //long duration;
 // Sup
@@ -20,27 +22,26 @@ void setup() {
   pinMode(motor2[1], OUTPUT);
 }
 
+// int getDistance(int raw)
+// {
+//  	////IR Distance sensor conversion rule
+//  	float Vout = float(raw) * 0.0048828125; // Conversion analog to voltage
+//  	int phys = 13 * pow(Vout, -1); // Conversion volt to distance
+//  	return phys;
+// }
 
-int getDistance(int raw)
-{
- 	////IR Distance sensor conversion rule
- 	float Vout = float(raw) * 0.0048828125; // Conversion analog to voltage
- 	int phys = 13 * pow(Vout, -1); // Conversion volt to distance
- 	return phys;
-}
+// int distanceRemoveError(int samples)
+// {
+//   int avg = 0;
+//   int gp2y0a21Val = analogRead(sharpPin);
 
-int distanceRemoveError(int samples)
-{
-  int avg = 0;
-  int gp2y0a21Val = analogRead(sharpPin);
+//    for( int i = 0; i < samples; i++  )
+//    {
+//        avg += getDistance(gp2y0a21Val);
+//    }
 
-   for( int i = 0; i < samples; i++  )
-   {
-       avg += getDistance(gp2y0a21Val);
-   }
-
-   return avg/samples ;  
-}
+//    return avg/samples ;  
+// }
 
 void run(bool go) {
   if (go) {
@@ -99,7 +100,7 @@ void roundabout(bool turn_left) {
 
     digitalWrite(motor2[0], LOW);
     digitalWrite(motor2[1], HIGH);
-    delay(500);
+    delay(250);
   }
 
   // moves forward
@@ -134,10 +135,13 @@ bool is_out_of_ring() {
 }
 
 void loop() {
-  int distance_no_err = distanceRemoveError(5);
+  //int distance_no_err = distanceRemoveError(5);
+  ave.push(60.374*1.3 * pow(map(analogRead(A0), 0, 1023, 0, 5000) / 1000.0,  -1.16));
+  float dist = ave.mean();
   int detect = digitalRead(lightPin);
+  bool did_roundabout = false;
   //Serial.print("Distance: ");
-  Serial.println(distance_no_err);
+  Serial.println(ave.mean());
   //Serial.println(" cm");
 
   // detect is HIGH on black, every other colour is LOW
@@ -159,8 +163,10 @@ void loop() {
       }
     }
     spin_180();
+
+    did_roundabout = false;
   } 
-  else if (distance_no_err < 30) {
+  else if (dist < 35 && !did_roundabout) {
     // Moves in a semisquare
     bool directions[] = {true, false};
 
@@ -168,12 +174,16 @@ void loop() {
       roundabout(directions[i]);
       delay(1000);
     }
+
+    did_roundabout = true;
       
-  } else if (distance_no_err < 76 && detect == LOW) {
+  } else if (dist < 76 && detect == LOW) {
     // Moves towards target
     run(true);
-  } else if (distance_no_err > 75) {
+    did_roundabout = false;    
+  } else if (dist > 75) {
     // Stops moving entirely
     run(false);
+    did_roundabout = false;
   }
 }
